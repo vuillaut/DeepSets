@@ -2,6 +2,7 @@ from astropy.table import Table
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from astropy.io.misc.hdf5 import write_table_hdf5
 
 
 
