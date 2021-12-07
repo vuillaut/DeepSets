@@ -19,7 +19,7 @@ def generate_spheres(n_spheres=40, n_points=10000):
         x0 = np.random.rand() * 10
         y0 = np.random.rand() * 10
         z0 = np.random.rand() * 10
-        r  = np.random.rand(n_points) * r1
+        r  = np.random.rand(n_points) * r_max
         theta = np.random.rand(n_points) * np.pi
         phi = np.random.rand(n_points) * np.pi *2
 
