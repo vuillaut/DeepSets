@@ -82,11 +82,11 @@ class PointCloudTrainer(object):
                 
                 self.optimizer.step()
                 del X,Y,f_X,loss
-            train_acc = np.rad2deg(sum_as/counts)
-            writer.add_scalar("train_acc", train_acc, j)
+            ang_sep = np.rad2deg(sum_as/counts)
+            writer.add_scalar("ang_sep", ang_sep, j)
             self.scheduler.step()
             if j%10==9:
-                tqdm.write('After epoch {0} Train Accuracy: {1:0.3f} '.format(j+1, train_acc))
+                tqdm.write('After epoch {0} Train Ang Sep: {1:0.3f} '.format(j+1, ang_sep))
 
     def test(self):
         self.D.eval()
