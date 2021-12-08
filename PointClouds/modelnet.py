@@ -59,10 +59,10 @@ class ModelFetcher(object):
 
         n_train = 800
         self._train_data = data[:, :n_train, :]
-        self._train_label = np.transpose([tab['src_theta'].data, tab['src_phi'].data])
+        self._train_label = np.deg2rad(np.transpose([tab['src_theta'].data, tab['src_phi'].data]))
         self._test_data = data[:, n_train:, :]
         assert len(self._test_data) > 0
-        self._test_label = np.transpose([tab['src_theta'].data,  tab['src_phi'].data])
+        self._test_label = np.deg2rad(np.transpose([tab['src_theta'].data,  tab['src_phi'].data]))
 
         self.num_classes = np.max(self._train_label) + 1
 
