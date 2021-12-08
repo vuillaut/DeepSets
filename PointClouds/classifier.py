@@ -6,7 +6,7 @@ from torch.autograd import Variable
 import torch.autograd as autograd
 import h5py
 import pdb
-from tqdm import tqdm, trange
+# from tqdm import tqdm, trange
 
 class PermEqui1_max(nn.Module):
   def __init__(self, in_dim, out_dim):

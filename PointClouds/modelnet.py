@@ -2,11 +2,12 @@ from __future__ import absolute_import
 from __future__ import division
 import os
 import numpy as np
-try:
-    get_ipython
-    from tqdm import tqdm_notebook as tqdm
-except:
-    from tqdm import tqdm
+# try:
+#     get_ipython
+#     from tqdm import tqdm_notebook as tqdm
+# except:
+
+from tqdm import tqdm
 import h5py
 
 from astropy.table import Table
@@ -88,7 +89,9 @@ class ModelFetcher(object):
         np.random.shuffle(self._train_label)
         return tqdm(self.next_train_batch(),
                     desc='Train loss: {:.4f}'.format(loss),
-                    total=self.num_train_batches, mininterval=1.0, leave=False)
+                    total=self.num_train_batches, mininterval=30.0,
+                    maxinterval=60,
+                    leave=False)
                     
     def next_train_batch(self):
         start = 0
