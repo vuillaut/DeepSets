@@ -22,6 +22,7 @@ network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
 data_path = '/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/Data/gold_angles.h5'
 log_dir = f'/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/experiments/run/{datetime.now()}'
+save_every = 50  # save checkpoint every N epochs
 checkpoint_path = None
 cuda = True
 #################### Settings ##############################
@@ -95,13 +96,13 @@ class PointCloudTrainer(object):
             ang_sep = np.rad2deg(sum_as/counts)
             writer.add_scalar("ang_sep", ang_sep, j)
             self.scheduler.step()
-            if j > 0 and j % 500 == 0:
+            if j > 0 and j % save_every == 0:
                 tqdm.write('After epoch {0} Train Ang Sep: {1:0.3f} '.format(j + 1, ang_sep))
                 torch.save({
                     'epoch': j,
                     'model_state_dict': self.D.state_dict(),
                     'optimizer_state_dict': self.optimizer.state_dict(),
-                    'ang_sep': ang_sep,},
+                    'ang_sep': ang_sep},
                     f'checkpoint_{j}.torch')
 
     def test(self):
