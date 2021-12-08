@@ -8,6 +8,19 @@ import h5py
 import pdb
 # from tqdm import tqdm, trange
 
+
+
+class CosAngularSepLoss(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, colat1, long1, colat2, long2):
+        cosdelta = torch.sin(colat1) * torch.sin(colat2) * torch.cos((long1 - long2)) \
+                   + torch.cos(colat1) * torch.cos(colat2)
+        return torch.abs(torch.mean(cosdelta))
+
+
 class PermEqui1_max(nn.Module):
   def __init__(self, in_dim, out_dim):
     super(PermEqui1_max, self).__init__()
