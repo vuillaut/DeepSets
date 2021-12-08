@@ -92,7 +92,7 @@ class PointCloudTrainer(object):
                     'epoch': j,
                     'model_state_dict': self.D.state_dict(),
                     'optimizer_state_dict': self.optimizer.state_dict(),
-                    'loss': loss, },
+                    'ang_sep': ang_sep,},
                     f'checkpoint_{j}.torch')
 
     def test(self):
