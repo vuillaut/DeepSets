@@ -1,14 +1,8 @@
 from __future__ import absolute_import
 from __future__ import division
-import os
-import numpy as np
-# try:
-#     get_ipython
-#     from tqdm import tqdm_notebook as tqdm
-# except:
 
-from tqdm import tqdm
-import h5py
+import numpy as np
+from tqdm.auto import tqdm
 
 from astropy.table import Table
 
