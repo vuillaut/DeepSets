@@ -44,7 +44,7 @@ class PointCloudTrainer(object):
             counts = 0
             sum_acc = 0.0
             train_data = self.model_fetcher.train_data(loss_val)
-            for x, _, y in train_data:
+            for ii, (x, _, y) in enumerate(train_data):
                 counts += len(y)
 #                 X = Variable(torch.cuda.FloatTensor(x))
 #                 Y = Variable(torch.cuda.LongTensor(y))
@@ -58,10 +58,13 @@ class PointCloudTrainer(object):
                 train_data.set_description('Train loss: {0:.4f}'.format(loss_val))
                 loss.backward()
                 classifier.clip_grad(self.D, 5)
-                writer.add_scalar("Loss/train", loss, loss_val, j)
+                writer.add_scalar("Loss/train", loss_val, (ii+1)*(j+1))
+#                 writer.add_scalar("Loss/val", loss_val, j)
+                
                 self.optimizer.step()
                 del X,Y,f_X,loss
             train_acc = sum_acc/counts
+            writer.add_scalar("train_acc", train_acc, j)
             self.scheduler.step()
             if j%10==9:
                 tqdm.write('After epoch {0} Train Accuracy: {1:0.3f} '.format(j+1, train_acc))
@@ -98,3 +101,6 @@ if __name__ == "__main__":
             print('Test accuracy: {0:0.2f} '.format(np.mean(test_accs)) + unichr(177).encode('utf-8') + ' {0:0.3f} '.format(np.std(test_accs)))
         except:
             print('Test accuracy: {0:0.2f} +/-  {0:0.3f} '.format(np.mean(test_accs), np.std(test_accs)))
+            
+        writer.flush()
+    writer.close()
