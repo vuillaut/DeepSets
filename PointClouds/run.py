@@ -12,14 +12,16 @@ import modelnet
 # from pytorch_lightning import loggers as pl_loggers
 
 from torch.utils.tensorboard import SummaryWriter
+from deepcompton.utils import angular_separation
 
 #################### Settings ##############################
-num_epochs = 200
-batch_size = 8
-downsample = 100    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+num_epochs = 2
+batch_size = 32
+downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
-data_path = 'cloud.h5'
+data_path = 'gold_angles.h5'
+cuda = False
 #################### Settings ##############################
 
 # tb_logger = pl_loggers.TensorBoardLogger("logs/")
@@ -32,8 +34,14 @@ class PointCloudTrainer(object):
         self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=True, do_augmentation=True)
 
         #Setup network
-        self.D = classifier.DTanh(network_dim, pool='max1').cuda()
-        self.L = nn.CrossEntropyLoss().cuda()
+        if cuda:
+            self.D = classifier.DTanhCompton(network_dim, pool='max1').cuda()
+            # self.L = nn.CrossEntropyLoss().cuda()
+            self.L = nn.MSELoss().cuda()
+        else:
+            self.D = classifier.DTanhCompton(network_dim, pool='max1')
+            # self.L = nn.CrossEntropyLoss()
+            self.L = nn.MSELoss().cuda()
         self.optimizer = optim.Adam([{'params':self.D.parameters()}], lr=1e-3, weight_decay=1e-7, eps=1e-3)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(400,num_epochs,400)), gamma=0.1)
         #self.optimizer = optim.Adamax([{'params':self.D.parameters()}], lr=5e-4, weight_decay=1e-7, eps=1e-3) # optionally use this for 5000 points case, but adam with scheduler also works
@@ -43,19 +51,23 @@ class PointCloudTrainer(object):
         loss_val = float('inf')
         for j in trange(num_epochs, desc="Epochs: "):
             counts = 0
-            sum_acc = 0.0
+            sum_as = 0.0
             train_data = self.model_fetcher.train_data(loss_val)
             for ii, (x, _, y) in enumerate(train_data):
                 counts += len(y)
-                X = Variable(torch.cuda.FloatTensor(x))
-                Y = Variable(torch.cuda.LongTensor(y))
-                # X = Variable(torch.FloatTensor(x))
-                # Y = Variable(torch.LongTensor(y))
+                if cuda:
+                    X = Variable(torch.cuda.FloatTensor(x))
+                    Y = Variable(torch.cuda.FloatTensor(y))
+                else:
+                    X = Variable(torch.FloatTensor(x))
+                    Y = Variable(torch.FloatTensor(y))
                 self.optimizer.zero_grad()
                 f_X = self.D(X)
                 loss = self.L(f_X, Y)
                 loss_val = loss.data.cpu().numpy()[()]
-                sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[()]
+                # sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[()]
+                sum_as += angular_separation(f_X[:,0].detach().numpy(), f_X[:,1].detach().numpy(),
+                                             Y[:,0].detach().numpy(), Y[:,1].detach().numpy()).sum()
                 train_data.set_description('Train loss: {0:.4f}'.format(loss_val))
                 loss.backward()
                 classifier.clip_grad(self.D, 5)
@@ -64,7 +76,7 @@ class PointCloudTrainer(object):
                 
                 self.optimizer.step()
                 del X,Y,f_X,loss
-            train_acc = sum_acc/counts
+            train_acc = sum_as/counts
             writer.add_scalar("train_acc", train_acc, j)
             self.scheduler.step()
             if j%10==9:
@@ -73,17 +85,20 @@ class PointCloudTrainer(object):
     def test(self):
         self.D.eval()
         counts = 0
-        sum_acc = 0.0
+        sum_as = 0.0
         for x, _, y in self.model_fetcher.test_data():
             counts += len(y)
-            X = Variable(torch.cuda.FloatTensor(x))
-            Y = Variable(torch.cuda.LongTensor(y))
-            # X = Variable(torch.FloatTensor(x))
-            # Y = Variable(torch.LongTensor(y))
+            if cuda:
+                X = Variable(torch.cuda.FloatTensor(x))
+                Y = Variable(torch.cuda.FloatTensor(y))
+            else:
+                X = Variable(torch.FloatTensor(x))
+                Y = Variable(torch.FloatTensor(y))
             f_X = self.D(X)
-            sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[()]
-            del X,Y,f_X
-        test_acc = sum_acc/counts
+            sum_as += angular_separation(f_X[:, 0].detach().numpy(), f_X[:, 1].detach().numpy(),
+                                         Y[:, 0].detach().numpy(), Y[:, 1].detach().numpy()).sum()
+            del X, Y, f_X
+        test_acc = sum_as/counts
         print('Final Test Accuracy: {0:0.3f}'.format(test_acc))
         return test_acc
 
@@ -105,5 +120,5 @@ if __name__ == "__main__":
             
         writer.flush()
     writer.close()
-    model_ouput_path = f'point_cloud_{datetime.now()}.pkl'
+    model_ouput_path = f'point_cloud_compton_{datetime.now()}.pkl'
     torch.save(t.D.state_dict(), model_ouput_path)

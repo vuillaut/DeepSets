@@ -186,3 +186,77 @@ def clip_grad(model, max_norm):
         for p in model.parameters():
             p.grad.data.mul_(clip_coef)
     return total_norm
+
+
+class DTanhCompton(nn.Module):
+
+    def __init__(self, d_dim, x_dim=3, pool='mean'):
+        super(DTanhCompton, self).__init__()
+        self.d_dim = d_dim
+        self.x_dim = x_dim
+
+        if pool == 'max':
+            self.phi = nn.Sequential(
+                PermEqui2_max(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui2_max(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui2_max(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+        elif pool == 'max1':
+            self.phi = nn.Sequential(
+                PermEqui1_max(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_max(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_max(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+        elif pool == 'mean':
+            self.phi = nn.Sequential(
+                PermEqui2_mean(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui2_mean(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui2_mean(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+        elif pool == 'mean1':
+            self.phi = nn.Sequential(
+                PermEqui1_mean(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_mean(self.d_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_mean(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+
+        self.ro = nn.Sequential(
+            nn.Dropout(p=0.5),
+            nn.Linear(self.d_dim, self.d_dim),
+            nn.Tanh(),
+            nn.Dropout(p=0.5),
+            nn.Linear(self.d_dim, 40),
+            nn.Linear(40, 2),
+        )
+        print(self)
+
+    def forward(self, x):
+        phi_output = self.phi(x)
+        sum_output, _ = phi_output.max(1)
+        ro_output = self.ro(sum_output)
+        return ro_output
+
+
+def clip_grad(model, max_norm):
+    total_norm = 0
+    for p in model.parameters():
+        param_norm = p.grad.data.norm(2)
+        total_norm += param_norm ** 2
+    total_norm = total_norm ** (0.5)
+    clip_coef = max_norm / (total_norm + 1e-6)
+    if clip_coef < 1:
+        for p in model.parameters():
+            p.grad.data.mul_(clip_coef)
+    return total_norm
