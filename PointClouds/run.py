@@ -15,10 +15,10 @@ from torch.utils.tensorboard import SummaryWriter
 from deepcompton.utils import angular_separation
 
 #################### Settings ##############################
-num_epochs = 2
+num_epochs = 5
 batch_size = 32
 downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
-network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
+network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
 data_path = 'gold_angles.h5'
 cuda = False
@@ -37,11 +37,13 @@ class PointCloudTrainer(object):
         if cuda:
             self.D = classifier.DTanhCompton(network_dim, pool='max1').cuda()
             # self.L = nn.CrossEntropyLoss().cuda()
-            self.L = nn.MSELoss().cuda()
+            # self.L = nn.MSELoss().cuda()
+            self.L = classifier.CosAngularSepLoss().cuda()
         else:
             self.D = classifier.DTanhCompton(network_dim, pool='max1')
             # self.L = nn.CrossEntropyLoss()
-            self.L = nn.MSELoss().cuda()
+            # self.L = nn.MSELoss()
+            self.L = classifier.CosAngularSepLoss()
         self.optimizer = optim.Adam([{'params':self.D.parameters()}], lr=1e-3, weight_decay=1e-7, eps=1e-3)
         self.scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=list(range(400,num_epochs,400)), gamma=0.1)
         #self.optimizer = optim.Adamax([{'params':self.D.parameters()}], lr=5e-4, weight_decay=1e-7, eps=1e-3) # optionally use this for 5000 points case, but adam with scheduler also works
@@ -49,11 +51,13 @@ class PointCloudTrainer(object):
     def train(self):
         self.D.train()
         loss_val = float('inf')
+        global_count = 0
         for j in trange(num_epochs, desc="Epochs: "):
             counts = 0
             sum_as = 0.0
             train_data = self.model_fetcher.train_data(loss_val)
             for ii, (x, _, y) in enumerate(train_data):
+                global_count += 1
                 counts += len(y)
                 if cuda:
                     X = Variable(torch.cuda.FloatTensor(x))
@@ -63,7 +67,9 @@ class PointCloudTrainer(object):
                     Y = Variable(torch.FloatTensor(y))
                 self.optimizer.zero_grad()
                 f_X = self.D(X)
-                loss = self.L(f_X, Y)
+                # loss = self.L(f_X, Y)
+                loss = self.L(f_X[:,0], f_X[:,1], Y[:,0], Y[:,1])
+
                 loss_val = loss.data.cpu().numpy()[()]
                 # sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[()]
                 sum_as += angular_separation(f_X[:,0].detach().numpy(), f_X[:,1].detach().numpy(),
@@ -71,7 +77,7 @@ class PointCloudTrainer(object):
                 train_data.set_description('Train loss: {0:.4f}'.format(loss_val))
                 loss.backward()
                 classifier.clip_grad(self.D, 5)
-                writer.add_scalar("Loss/train", loss_val, (ii+1)*(j+1))
+                writer.add_scalar("Loss/train", loss_val, global_count)
 #                 writer.add_scalar("Loss/val", loss_val, j)
                 
                 self.optimizer.step()
