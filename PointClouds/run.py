@@ -7,8 +7,8 @@ import numpy as np
 
 import classifier
 import modelnet
-from pytorch_lightning import Trainer
-from pytorch_lightning import loggers as pl_loggers
+# from pytorch_lightning import Trainer
+# from pytorch_lightning import loggers as pl_loggers
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -21,7 +21,7 @@ num_repeats = 1    #Number of times to repeat the experiment
 data_path = 'cloud.h5'
 #################### Settings ##############################
 
-tb_logger = pl_loggers.TensorBoardLogger("logs/")
+# tb_logger = pl_loggers.TensorBoardLogger("logs/")
 writer = SummaryWriter()
 
 
