@@ -15,13 +15,13 @@ from torch.utils.tensorboard import SummaryWriter
 from deepcompton.utils import angular_separation
 
 #################### Settings ##############################
-num_epochs = 20
-batch_size = 32
-downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+num_epochs = 2000
+batch_size = 4
+downsample = 20    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
-data_path = 'gold_angles.h5'
-cuda = False
+data_path = '/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/Data/gold_angles.h5'
+cuda = True
 #################### Settings ##############################
 
 # tb_logger = pl_loggers.TensorBoardLogger("logs/")
@@ -72,8 +72,8 @@ class PointCloudTrainer(object):
 
                 loss_val = loss.data.cpu().numpy()[()]
                 # sum_acc += (f_X.max(dim=1)[1] == Y).float().sum().data.cpu().numpy()[()]
-                sum_as += angular_separation(f_X[:,0].detach().numpy(), f_X[:,1].detach().numpy(),
-                                             Y[:,0].detach().numpy(), Y[:,1].detach().numpy()).sum()
+                sum_as += angular_separation(f_X[:,0].detach().cpu().numpy(), f_X[:,1].detach().cpu().numpy(),
+                                             Y[:,0].detach().cpu().numpy(), Y[:,1].detach().cpu().numpy()).sum()
                 train_data.set_description('Train loss: {0:.4f}'.format(loss_val))
                 loss.backward()
                 classifier.clip_grad(self.D, 5)
@@ -101,8 +101,8 @@ class PointCloudTrainer(object):
                 X = Variable(torch.FloatTensor(x))
                 Y = Variable(torch.FloatTensor(y))
             f_X = self.D(X)
-            sum_as += angular_separation(f_X[:, 0].detach().numpy(), f_X[:, 1].detach().numpy(),
-                                         Y[:, 0].detach().numpy(), Y[:, 1].detach().numpy()).sum()
+            sum_as += angular_separation(f_X[:, 0].detach().cpu().numpy(), f_X[:, 1].detach().cpu().numpy(),
+                                         Y[:, 0].detach().cpu().numpy(), Y[:, 1].detach().cpu().numpy()).sum()
             del X, Y, f_X
         test_acc = sum_as/counts
         print('Final Test Accuracy: {0:0.3f}'.format(test_acc))
