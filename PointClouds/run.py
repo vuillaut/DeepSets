@@ -86,8 +86,14 @@ class PointCloudTrainer(object):
             ang_sep = np.rad2deg(sum_as/counts)
             writer.add_scalar("ang_sep", ang_sep, j)
             self.scheduler.step()
-            if j%10==9:
-                tqdm.write('After epoch {0} Train Ang Sep: {1:0.3f} '.format(j+1, ang_sep))
+            if j > 0 and j % 500 == 0:
+                tqdm.write('After epoch {0} Train Ang Sep: {1:0.3f} '.format(j + 1, ang_sep))
+                torch.save({
+                    'epoch': j,
+                    'model_state_dict': self.D.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'loss': loss, },
+                    f'checkpoint_{j}.torch')
 
     def test(self):
         self.D.eval()
