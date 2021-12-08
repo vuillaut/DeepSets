@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from deepcompton.utils import angular_separation
 
 #################### Settings ##############################
-num_epochs = 5
+num_epochs = 20
 batch_size = 32
 downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
@@ -82,7 +82,7 @@ class PointCloudTrainer(object):
                 
                 self.optimizer.step()
                 del X,Y,f_X,loss
-            train_acc = sum_as/counts
+            train_acc = np.rad2deg(sum_as/counts)
             writer.add_scalar("train_acc", train_acc, j)
             self.scheduler.step()
             if j%10==9:
