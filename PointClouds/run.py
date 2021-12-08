@@ -13,9 +13,9 @@ import modelnet
 from torch.utils.tensorboard import SummaryWriter
 
 #################### Settings ##############################
-num_epochs = 5
-batch_size = 20
-downsample = 2    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+num_epochs = 200
+batch_size = 2
+downsample = 100    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
 data_path = 'cloud.h5'
