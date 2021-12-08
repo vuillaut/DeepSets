@@ -2,6 +2,7 @@ from astropy.table import Table
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from astropy.io.misc.hdf5 import write_table_hdf5
 
 
 
@@ -19,7 +20,7 @@ def generate_spheres(n_spheres=40, n_points=10000):
         x0 = np.random.rand() * 10
         y0 = np.random.rand() * 10
         z0 = np.random.rand() * 10
-        r  = np.random.rand(n_points) * r1
+        r  = np.random.rand(n_points) * r_max
         theta = np.random.rand(n_points) * np.pi
         phi = np.random.rand(n_points) * np.pi *2
 

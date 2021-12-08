@@ -7,16 +7,22 @@ import numpy as np
 
 import classifier
 import modelnet
+from pytorch_lightning import Trainer
+from pytorch_lightning import loggers as pl_loggers
 
+from torch.utils.tensorboard import SummaryWriter
 
 #################### Settings ##############################
-num_epochs = 50
-batch_size = 10
+num_epochs = 5
+batch_size = 20
 downsample = 2    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
-num_repeats = 5    #Number of times to repeat the experiment
+num_repeats = 1    #Number of times to repeat the experiment
 data_path = 'cloud.h5'
 #################### Settings ##############################
+
+tb_logger = pl_loggers.TensorBoardLogger("logs/")
+writer = SummaryWriter()
 
 
 class PointCloudTrainer(object):
@@ -52,6 +58,7 @@ class PointCloudTrainer(object):
                 train_data.set_description('Train loss: {0:.4f}'.format(loss_val))
                 loss.backward()
                 classifier.clip_grad(self.D, 5)
+                writer.add_scalar("Loss/train", loss, loss_val, j)
                 self.optimizer.step()
                 del X,Y,f_X,loss
             train_acc = sum_acc/counts
