@@ -24,6 +24,7 @@ data_path = '/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/Data/gold_an
 log_dir = f'/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/experiments/run/{datetime.now()}'
 save_every = 50  # save checkpoint every N epochs
 checkpoint_path = None
+pool = 'custom'
 cuda = True
 if not cuda:
     data_path = '/Users/thomasvuillaume/Work/astroinfo2021/Compton/Data/gold_angles.h5'
@@ -42,12 +43,12 @@ class PointCloudTrainer(object):
 
         #Setup network
         if cuda:
-            self.D = classifier.DTanhCompton(network_dim, pool='max1').cuda()
+            self.D = classifier.DTanhCompton(network_dim, pool=pool).cuda()
             # self.L = nn.CrossEntropyLoss().cuda()
             # self.L = nn.MSELoss().cuda()
             self.L = classifier.CosAngularSepLoss().cuda()
         else:
-            self.D = classifier.DTanhCompton(network_dim, pool='max1')
+            self.D = classifier.DTanhCompton(network_dim, pool=pool)
             # self.L = nn.CrossEntropyLoss()
             # self.L = nn.MSELoss()
             self.L = classifier.CosAngularSepLoss()
