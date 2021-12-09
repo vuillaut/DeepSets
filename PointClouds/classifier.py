@@ -259,15 +259,15 @@ class DTanhCompton(nn.Module):
         elif pool == 'custom':
             self.phi = nn.Sequential(
                 PermEqui1_custom(self.x_dim, self.d_dim),
-                nn.Tanh(),
+                # nn.Tanh(),
                 PermEqui1_custom(self.d_dim, self.d_dim),
-                nn.Tanh(),
+                # nn.Tanh(),
             )
 
         self.ro = nn.Sequential(
             # nn.Dropout(p=0.5),
             nn.Linear(self.d_dim, self.d_dim),
-            nn.Tanh(),
+            # nn.Tanh(),
             # nn.Dropout(p=0.5),
             nn.Linear(self.d_dim, 40),
             nn.Linear(40, 2),

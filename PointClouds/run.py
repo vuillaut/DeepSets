@@ -15,17 +15,17 @@ from torch.utils.tensorboard import SummaryWriter
 from deepcompton.utils import angular_separation
 
 #################### Settings ##############################
-num_epochs = 200
+num_epochs = 50
 batch_size = 4
-downsample = 2    #For 5000 points use 2, for 1000 use 10, for 100 use 100
-network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
+downsample = 10    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+network_dim = 256  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
 data_path = '/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/Data/gold_angles.h5'
 log_dir = f'/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/experiments/run/{datetime.now()}'
 save_every = 50  # save checkpoint every N epochs
 checkpoint_path = None
 pool = 'custom'
-cuda = True
+cuda = False
 if not cuda:
     data_path = '/Users/thomasvuillaume/Work/astroinfo2021/Compton/Data/gold_angles.h5'
     log_dir = f'/Users/thomasvuillaume/Work/astroinfo2021/Compton/experiments/run/{datetime.now()}'
@@ -126,9 +126,9 @@ class PointCloudTrainer(object):
             sum_as += angular_separation(f_X[:, 0].detach().cpu().numpy(), f_X[:, 1].detach().cpu().numpy(),
                                          Y[:, 0].detach().cpu().numpy(), Y[:, 1].detach().cpu().numpy()).sum()
             del X, Y, f_X
-        test_acc = sum_as/counts
-        print('Final Test Accuracy: {0:0.3f}'.format(test_acc))
-        return test_acc
+        ang_sep = np.rad2deg(sum_as/counts)
+        print('Final Test Accuracy: {0:0.3f}'.format(ang_sep))
+        return ang_sep
 
 if __name__ == "__main__":
     test_accs = []
