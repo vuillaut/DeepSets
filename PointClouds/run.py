@@ -15,16 +15,16 @@ from torch.utils.tensorboard import SummaryWriter
 from deepcompton.utils import angular_separation
 
 #################### Settings ##############################
-num_epochs = 2000
+num_epochs = 200
 batch_size = 4
-downsample = 20    #For 5000 points use 2, for 1000 use 10, for 100 use 100
+downsample = 2    #For 5000 points use 2, for 1000 use 10, for 100 use 100
 network_dim = 512  #For 5000 points use 512, for 1000 use 256, for 100 use 256
 num_repeats = 1    #Number of times to repeat the experiment
 data_path = '/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/Data/gold_angles.h5'
 log_dir = f'/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/experiments/run/{datetime.now()}'
 save_every = 50  # save checkpoint every N epochs
 checkpoint_path = None
-cuda = True
+cuda = False
 #################### Settings ##############################
 
 # tb_logger = pl_loggers.TensorBoardLogger("logs/")
@@ -34,7 +34,7 @@ writer = SummaryWriter(log_dir=log_dir)
 class PointCloudTrainer(object):
     def __init__(self):
         #Data loader
-        self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=True, do_augmentation=True)
+        self.model_fetcher = modelnet.ModelFetcher(data_path, batch_size, downsample, do_standardize=False, do_augmentation=False)
         self.start_epoch = 0
 
         #Setup network
