@@ -24,7 +24,10 @@ data_path = '/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/Data/gold_an
 log_dir = f'/uds_data/glearn/workspaces/thomas/astroinfo21/Compton/experiments/run/{datetime.now()}'
 save_every = 50  # save checkpoint every N epochs
 checkpoint_path = None
-cuda = False
+cuda = True
+if not cuda:
+    data_path = '/Users/thomasvuillaume/Work/astroinfo2021/Compton/Data/gold_angles.h5'
+    log_dir = f'/Users/thomasvuillaume/Work/astroinfo2021/Compton/experiments/run/{datetime.now()}'
 #################### Settings ##############################
 
 # tb_logger = pl_loggers.TensorBoardLogger("logs/")
