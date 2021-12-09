@@ -21,6 +21,17 @@ class CosAngularSepLoss(nn.Module):
         return -torch.mean(cosdelta)
 
 
+class PermEqui1_custom(nn.Module):
+  def __init__(self, in_dim, out_dim):
+    super(PermEqui1_custom, self).__init__()
+    self.Gamma = nn.Linear(in_dim, out_dim)
+
+  def forward(self, x):
+    # xm, _ = x.max(1, keepdim=True)
+    x = self.Gamma(x)
+    return x
+
+
 class PermEqui1_max(nn.Module):
   def __init__(self, in_dim, out_dim):
     super(PermEqui1_max, self).__init__()
@@ -245,11 +256,19 @@ class DTanhCompton(nn.Module):
                 nn.Tanh(),
             )
 
+        elif pool == 'custom':
+            self.phi = nn.Sequential(
+                PermEqui1_custom(self.x_dim, self.d_dim),
+                nn.Tanh(),
+                PermEqui1_custom(self.d_dim, self.d_dim),
+                nn.Tanh(),
+            )
+
         self.ro = nn.Sequential(
-            nn.Dropout(p=0.5),
+            # nn.Dropout(p=0.5),
             nn.Linear(self.d_dim, self.d_dim),
             nn.Tanh(),
-            nn.Dropout(p=0.5),
+            # nn.Dropout(p=0.5),
             nn.Linear(self.d_dim, 40),
             nn.Linear(40, 2),
         )
